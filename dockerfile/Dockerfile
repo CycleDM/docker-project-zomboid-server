@@ -1,15 +1,21 @@
-FROM ubuntu:latest
+FROM steamcmd/steamcmd:latest
 
 ARG MAX_RAM=4G
+ENV HOME=/app \
+    LANG=C.UTF-8
+    
 
-ENV LANG=C.UTF-8
+COPY ./temp $HOME/Server/
+COPY ./scripts/start-helper.sh $HOME/
 
-COPY ./temp /data/Server/
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends screen && \
+    rm -rf /var/lib/apt/lists/* && \
+    sed -i "s/-Xmx8g/-Xmx$MAX_RAM/g" $HOME/Server/ProjectZomboid64.json && \
+    #mkdir $HOME/Zomboid && \
+    #ln -s $HOME/Zomboid /root/Zomboid && \
+    chmod a+x $HOME/Server/start-server.sh $HOME/start-helper.sh
 
-RUN sed -i 's/-Xmx8g/-Xmx\$MAX_RAM/g' /data/Server/ProjectZomboid64.json && \
-    mkdir /data/Zomboid && \
-    ln -s /data/Zomboid /root/Zomboid
+WORKDIR $HOME
 
-WORKDIR /data/Server
-
-ENTRYPOINT ["sh","start-server.sh"]
+ENTRYPOINT ["sh","start-helper.sh"]
